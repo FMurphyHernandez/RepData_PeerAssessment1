@@ -1,0 +1,76 @@
+---
+title: "Reproducible Research: Peer Assessment 1"
+output: 
+  html_document:
+    keep_md: true
+---
+
+
+## Loading and preprocessing the data
+
+```{r,echo=TRUE}
+unzip("activity.zip")
+data<-read.csv('activity.csv')
+head(data)
+tail(data)
+str(data)
+summary(data)
+```
+
+
+## What is mean total number of steps taken per day?
+
+
+
+```{r,echo=TRUE}
+histdata <- aggregate(steps ~ date, data = data, sum)
+barplot(histdata$steps,width=1, names.arg = histdata$date, xlab = 'date', ylab = 'steps',col='lightblue')
+MeanSteps<-mean(histdata$steps, na.rm = TRUE)
+MeanSteps
+MedSteps<-median(histdata$steps,na.rm=TRUE)
+MedSteps
+```
+
+## What is the average daily activity pattern?
+```{r,echo=TRUE}
+dailydata <- aggregate(steps ~ interval, data =data, FUN = mean)
+plot(dailydata, type = "l",col='red')
+dailydata$interval[which(dailydata$steps==max(dailydata$steps))]
+```
+
+
+
+## Imputing missing values
+
+```{r}
+sum(is.na(data))
+sum(is.na(data$steps)| is.na(data$date) | is.na(data$interval))
+activity<-data
+activity$steps[is.na(activity$steps)]<-mean(activity$steps,na.rm=TRUE)
+activity$interval[is.na(activity$interval)]<-median(activity$interval,na.rm=TRUE)
+sum(is.na(activity))
+histact <- aggregate(steps ~ date, data = activity, sum)
+barplot(histact$steps,width=1, names.arg = histact$date, xlab = 'date', ylab = 'steps',col='lightblue')
+mean(histact$steps)
+median(histact$steps)
+```
+After filling the NAs the histogram looks more smooth,also the mean and the median coincide which means a kind of simmetry in the data.
+
+## Are there differences in activity patterns between weekdays and weekends?
+
+```{r,echo=TRUE}
+weekday <- function(x) {
+    if (weekdays(as.Date(x)) %in% c('sabado', 'domingo')) {
+        'weekend'
+    } else {
+        'weekday'
+    }
+}
+activity$dayclass <- as.factor(sapply(activity$date, weekday))
+par(mfrow = c(2, 1))
+stepsweekday <- aggregate(steps ~ interval, data = activity, subset = activity$dayclass =='weekday', FUN = mean)
+plot(stepsweekday, type = "l",col='red',xlab='weekdays')
+stepsweekend<- aggregate(steps ~ interval, data = activity, subset = activity$dayclass =='weekend', FUN = mean)
+plot(stepsweekend, type = "l",col='green',xlab='weekends')
+```
+
